@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { Button } from "../ui/button";
 
-export function NavBar({loggedIn, isAdmin, invalidateSession}: {loggedIn: boolean, isAdmin: boolean, invalidateSession: () => void}){
+export function NavBar({loggedIn, invalidateSession}: {loggedIn: boolean,  invalidateSession: () => void}){
     
     return (
         <nav className="flex flex-row w-full px-6 py-4 border-b border-neutral-300">
@@ -12,9 +12,6 @@ export function NavBar({loggedIn, isAdmin, invalidateSession}: {loggedIn: boolea
                 <Link href="/events">Events</Link>
                 <Link href="/groups">Peer Groups</Link>
                 <Link href="/resources">Resources</Link>
-                {
-                    isAdmin && <Link href="/admin">Admin</Link>
-                }
                 {
                     loggedIn ? 
                     <>

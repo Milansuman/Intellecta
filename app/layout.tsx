@@ -20,11 +20,9 @@ export default async function RootLayout({
 	children: React.ReactNode;
 }>) {
 	let loggedIn = false;
-	let isAdmin = false;
 	if(cookies().get("session")?.value){
 		try{
 			const id = await verifyToken(cookies().get("session")?.value!)
-			isAdmin = (await getUser(id)).is_admin;
 			loggedIn = true;
 		}catch(error){
 			loggedIn = false;
@@ -40,7 +38,7 @@ export default async function RootLayout({
 	return (
 		<html lang="en">
 			<body className={cn(inter.className, "flex flex-col h-screen")}>
-				<NavBar loggedIn={loggedIn} isAdmin={isAdmin} invalidateSession={invalidateSession}/>
+				<NavBar loggedIn={loggedIn} invalidateSession={invalidateSession}/>
 				{children}
 			</body>
 		</html>
