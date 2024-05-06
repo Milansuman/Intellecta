@@ -286,6 +286,55 @@ const peerGroupConvertor = () => ({
 
 const PeerGroups = collection(db, "peer_groups").withConverter(peerGroupConvertor());
 
+class Resource{
+    id: string | null;
+    name: string;
+    url: string;
+    size: number;
+    tags: string[];
+
+    constructor(
+        name: string,
+        url: string,
+        size: number,
+        id: string | null = null,
+        tags: string[] = []
+    ){
+        this.name = name;
+        this.url = url;
+        this.size = size;
+        this.tags = tags;
+        this.id = id;
+    }
+
+    toString(){
+        return this.name;
+    }
+}
+
+const resourceConvertor = () => ({
+    toFirestore: (resource: PartialWithFieldValue<Resource>) => {
+        return {
+            name: resource.name,
+            url: resource.url,
+            size: resource.size,
+            tags: resource.tags,
+        }
+    },
+    fromFirestore: (snapshot: QueryDocumentSnapshot) => {
+        const data = snapshot.data();
+        return new Resource(
+            data.name,
+            data.url,
+            data.size,
+            snapshot.id,
+            data.tags
+        )
+    }
+})
+
+const Resources = collection(db, "resources").withConverter(resourceConvertor())
+
 export async function login(email: string, password: string): Promise<string> {
     const q = query(Users, where('email', '==', email))
     const usersRef = await getDocs(q)
@@ -471,10 +520,26 @@ export async function addUserToPeerGroup(title: string, userId: string){
     })
 }
 
+export async function getResources(){
+    const resourceSnapshot = await getDocs(query(Resources));
+
+    const resources: Resource[] = [];
+    for(const resource of resourceSnapshot.docs){
+        resources.push(resource.data() as Resource)
+    }
+
+    return resources;
+}
+
+export async function addResource(file: File, tags: string[]){
+    const url = await uploadFile(file);
+    await addDoc(Resources, new Resource(file.name, url, file.size, null, tags));
+}
+
 export async function uploadFile(file: File): Promise<string>{
     const storageRef = ref(storage, file.name);
     await uploadBytes(storageRef, file)
     return await getDownloadURL(storageRef);
 }
 
-export type {User, College, PeerGroup, Event, Profile};
+export type {User, College, PeerGroup, Event, Profile, Resource};

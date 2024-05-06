@@ -11,6 +11,7 @@ export function NavBar({loggedIn, isAdmin, invalidateSession}: {loggedIn: boolea
                 <Link href="/">Home</Link>
                 <Link href="/events">Events</Link>
                 <Link href="/groups">Peer Groups</Link>
+                <Link href="/resources">Resources</Link>
                 {
                     isAdmin && <Link href="/admin">Admin</Link>
                 }

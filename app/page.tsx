@@ -86,7 +86,7 @@ export default function Page() {
                 </div>
                 <div className="flex flex-col items-center space-y-4 text-center">
                   <blockquote className="text-lg font-semibold leading-snug lg:text-xl lg:leading-normal xl:text-2xl">
-                    “I've been a member of Intellecta for over a year, and it's been an invaluable resource for me. The
+                    “I&apos;ve been a member of Intellecta for over a year, and it&apos;s been an invaluable resource for me. The
                     chat feature has allowed me to connect with like-minded individuals and collaborate on projects.“
                   </blockquote>
                   <div>
