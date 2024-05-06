@@ -491,7 +491,6 @@ export async function addProfile(id: string, email: string, dob: string, academi
 }
 
 export async function getPeerGroup(title: string){
-    console.log(title)
     const peerGroupSnaps = await getDocs(query(PeerGroups, where("name", "==", title)));
 
     if(peerGroupSnaps.empty){
