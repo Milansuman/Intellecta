@@ -10,7 +10,7 @@ export default async function PeerGroup({params}: {params: {title : string}}){
             const id = await verifyToken(cookies().get("session")?.value!)
             await addUserToPeerGroup(decodeURI(params.title), id)
         }catch(error){
-            redirect("/login");
+            throw error;
         }
     }else{
         redirect("/login")
