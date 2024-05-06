@@ -29,6 +29,7 @@ export default async function NewGroup(){
     async function handleAddPeer(formData: FormData){
         "use server"
         await addPeerGroup(formData.get("thumbnail") as File, formData.get("title") as string, formData.get("description") as string)
+        redirect("/groups/new")
     }
 
     return (
