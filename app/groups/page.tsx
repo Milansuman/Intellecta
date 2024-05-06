@@ -2,6 +2,7 @@ import { PeerGroup } from "@/components/custom/group";
 import { NewPeerGroup } from "@/components/custom/newGroup";
 import { Button } from "@/components/ui/button";
 import { getPeerGroups, getUser, verifyToken } from "@/lib/db";
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 
 import Link from "next/link";
@@ -11,8 +12,14 @@ export default async function Groups(){
     const peerGroups = await getPeerGroups();
     let isAdmin = false;
     if(cookies().get("session")?.value){
-        const id = await verifyToken(cookies().get("session")?.value!)
-		isAdmin = (await getUser(id)).is_admin;
+        try{
+            const id = await verifyToken(cookies().get("session")?.value!)
+		    isAdmin = (await getUser(id)).is_admin;
+        }catch(error){
+            redirect("/login");
+        }
+    }else{
+        redirect("/login");
     }
 
     return (

@@ -4,9 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import { addPeerGroup } from "@/lib/db";
+import { addPeerGroup, verifyToken, getUser } from "@/lib/db";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-export default function NewGroup(){
+export default async function NewGroup(){
+
+    if(cookies().get("session")?.value){
+        let isAdmin = false;
+        try{
+            const id = await verifyToken(cookies().get("session")?.value!)
+            isAdmin = (await getUser(id)).is_admin
+        }catch(error){
+            redirect("/login");
+        }
+
+        if(!isAdmin){
+            redirect("/groups");
+        }
+    }else{
+        redirect("/login");
+    }
 
     async function handleAddPeer(formData: FormData){
         "use server"

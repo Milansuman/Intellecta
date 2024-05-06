@@ -15,7 +15,9 @@ import {
     DocumentData,
     documentId,
     setDoc,
-    deleteDoc
+    deleteDoc,
+    PartialWithFieldValue,
+    QueryDocumentSnapshot
 } from "firebase/firestore/lite";
 import {getStorage, ref, uploadBytes, getDownloadURL} from "firebase/storage"
 import bcrypt from 'bcryptjs';
@@ -63,8 +65,8 @@ class User {
 }
 
 // Firestore data converter
-const userConverter = {
-    toFirestore(user: User): any {
+const userConverter = () => ({
+    toFirestore(user: PartialWithFieldValue<User>) {
         return {
             email: user.email,
             password: user.password,
@@ -72,8 +74,8 @@ const userConverter = {
             is_admin: user.is_admin || false,
         };
     },
-    fromFirestore(snapshot: any, options: any): User {
-        const data = snapshot.data(options);
+    fromFirestore(snapshot: QueryDocumentSnapshot): User {
+        const data = snapshot.data();
         return new User(
             data.email,
             data.password,
@@ -82,14 +84,15 @@ const userConverter = {
             snapshot.id,
         );
     },
-};
+});
 
-const Users = collection(db, "users").withConverter(userConverter);
+const Users = collection(db, "users").withConverter(userConverter());
 
 class Profile {
     academic_preference: string[];
     interest: string[];
     userid: string;
+    matches: string[];
     id: string | null;
 
     constructor(
@@ -97,11 +100,13 @@ class Profile {
         interest: string,
         userid: string,
         id: string | null = null,
+        matches: string[] | null = null
     ) {
         this.academic_preference = academic_preference.split(",");
         this.interest = interest.split(",");
         this.userid = userid;
         this.id = id;
+        this.matches = matches ?? [];
     }
 
     toString(): string {
@@ -109,26 +114,28 @@ class Profile {
     }
 }
 
-const profileConverter = {
-    toFirestore(profile: Profile): any {
+const profileConverter = () => ({
+    toFirestore(profile: PartialWithFieldValue<Profile>): any {
         return {
             academic_preference: profile.academic_preference,
             interest: profile.interest,
             userid: profile.userid,
+            matches: profile.matches
         };
     },
-    fromFirestore(snapshot: any, options: any): Profile {
-        const data = snapshot.data(options);
+    fromFirestore(snapshot: QueryDocumentSnapshot): Profile {
+        const data = snapshot.data();
         return new Profile(
             Array.isArray(data.academic_preference) ? data.academic_preference.join(",") : data.academic_preference,
             Array.isArray(data.interest) ? data.interest.join(",") : data.interest,
             data.userid,
             snapshot.id,
+            data.matches
         );
     },
-};
+});
 
-const Profiles = collection(db, "profiles").withConverter(profileConverter);
+const Profiles = collection(db, "profiles").withConverter(profileConverter());
 
 class Event {
     name: string;
@@ -153,6 +160,8 @@ class Event {
         this.college_id = college_id;
         if (college) {
             this.college = college;
+        }else{
+            this.college = null;
         }
     }
 
@@ -161,8 +170,8 @@ class Event {
     }
 }
 
-const eventConverter = {
-    toFirestore(event: Event): any {
+const eventConverter = () => ({
+    toFirestore(event: PartialWithFieldValue<Event>): any {
         return {
             name: event.name,
             type: event.type,
@@ -170,8 +179,8 @@ const eventConverter = {
             college_id: event.college_id,
         };
     },
-    fromFirestore(snapshot: any, options: any): Event {
-        const data = snapshot.data(options);
+    fromFirestore(snapshot: QueryDocumentSnapshot): Event {
+        const data = snapshot.data();
         return new Event(
             data.name,
             data.type,
@@ -181,9 +190,9 @@ const eventConverter = {
             snapshot.id,
         );
     },
-};
+});
 
-const Events = collection(db, "events").withConverter(eventConverter);
+const Events = collection(db, "events").withConverter(eventConverter());
 
 class College {
     name: string;
@@ -211,8 +220,8 @@ class College {
     }
 }
 
-const collegeConverter = {
-    toFirestore(college: College): any {
+const collegeConverter = () => ({
+    toFirestore(college: PartialWithFieldValue<College>): any {
         return {
             name: college.name,
             created_at: college.created_at,
@@ -220,8 +229,8 @@ const collegeConverter = {
             delete_at: college.delete_at,
         };
     },
-    fromFirestore(snapshot: any, options: any): College {
-        const data = snapshot.data(options);
+    fromFirestore(snapshot: QueryDocumentSnapshot): College {
+        const data = snapshot.data();
         return new College(
             data.name,
             data.created_at,
@@ -230,9 +239,9 @@ const collegeConverter = {
             snapshot.id,
         );
     },
-};
+});
 
-const Colleges = collection(db, "colleges").withConverter(collegeConverter);
+const Colleges = collection(db, "colleges").withConverter(collegeConverter());
 
 class PeerGroup {
     id: string | null;
@@ -254,8 +263,8 @@ class PeerGroup {
     }
 }
 
-const peerGroupConvertor = {
-    toFirestore: (peerGroup: PeerGroup) => {
+const peerGroupConvertor = () => ({
+    toFirestore: (peerGroup: PartialWithFieldValue<PeerGroup>) => {
         return {
             name: peerGroup.name,
             description: peerGroup.description,
@@ -263,8 +272,8 @@ const peerGroupConvertor = {
             users: peerGroup.users
         }
     },
-    fromFirestore: (snapshot: any, options: any) => {
-        const data = snapshot.data(options);
+    fromFirestore: (snapshot: QueryDocumentSnapshot) => {
+        const data = snapshot.data();
         return new PeerGroup(
             data.name,
             data.description,
@@ -273,9 +282,9 @@ const peerGroupConvertor = {
             snapshot.id
         )
     }
-}
+})
 
-const PeerGroups = collection(db, "peer_groups").withConverter(peerGroupConvertor);
+const PeerGroups = collection(db, "peer_groups").withConverter(peerGroupConvertor());
 
 export async function login(email: string, password: string): Promise<string> {
     const q = query(Users, where('email', '==', email))
@@ -287,7 +296,7 @@ export async function login(email: string, password: string): Promise<string> {
     const user = userDoc.data();
 
     // Verify password
-    const validPassword = await bcrypt.compare(password, user.password);
+    const validPassword = await bcrypt.compare(password, user.password as string);
     if (!validPassword) {
         throw new Error("Invalid password");
     }
@@ -354,7 +363,7 @@ export async function verifyToken(token: string): Promise<string>{
                 reject(err);
             }
 
-            resolve(decoded?.id)
+            resolve((decoded as User)?.id!)
         })
     })
 }
@@ -458,7 +467,7 @@ export async function addUserToPeerGroup(title: string, userId: string){
     const peerGroupSnap = await getDocs(query(PeerGroups, where("name", "==", title)));
     const data = peerGroupSnap.docs[0].data();
     await updateDoc(doc(db, "peer_groups", peerGroupSnap.docs[0].id), {
-        users: Array.from(new Set(data.users.concat([userId])))
+        users: Array.from(new Set((data.users as string[]).concat([userId])))
     })
 }
 
@@ -467,3 +476,5 @@ export async function uploadFile(file: File): Promise<string>{
     await uploadBytes(storageRef, file)
     return await getDownloadURL(storageRef);
 }
+
+export type {User, College, PeerGroup, Event, Profile};
