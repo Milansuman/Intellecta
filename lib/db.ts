@@ -335,6 +335,68 @@ const resourceConvertor = () => ({
 
 const Resources = collection(db, "resources").withConverter(resourceConvertor())
 
+class Message{
+    id: string | null;
+    userid: string;
+    content: string;
+
+    constructor(userid: string, content: string, id: string | null = null){
+        this.userid = userid;
+        this.content = content;
+        this.id = id;
+    }
+}
+
+const messageConvertor = () => ({
+    toFirestore: (message: PartialWithFieldValue<Message>) => {
+        return {
+            userid: message.userid,
+            content: message.content
+        }
+    },
+    fromFirestore: (snapshot: QueryDocumentSnapshot) => {
+        const data = snapshot.data()
+        return new Message(
+            data.userid,
+            data.content,
+            snapshot.id
+        )
+    }
+});
+
+const Messages = collection(db, "messages").withConverter(messageConvertor());
+
+class Chat{
+    id: string | null;
+    messages: string[];
+    users: string[];
+
+    constructor(messages: string[], users: string[], id:string | null = null){
+        this.messages = messages;
+        this.users = users;
+        this.id = id;
+    }
+}
+
+const chatConvertor = () => ({
+    toFirestore: (chat: PartialWithFieldValue<Chat>) => {
+        return {
+            messages: chat.messages,
+            users: chat.users
+        }
+    },
+    fromFirestore: (snapshot: QueryDocumentSnapshot) => {
+        const data = snapshot.data();
+        return new Chat(
+            data.messages,
+            data.users,
+            snapshot.id
+        )
+    }
+});
+
+const Chats = collection(db, "chats").withConverter(chatConvertor());
+
 export async function login(email: string, password: string): Promise<string> {
     const q = query(Users, where('email', '==', email))
     const usersRef = await getDocs(q)
@@ -468,7 +530,8 @@ export async function getUser(id: string){
     return {
         email: user.email,
         dob: user.dob,
-        is_admin: user.is_admin
+        is_admin: user.is_admin,
+        id: user.id
     }
 }
 
@@ -541,4 +604,41 @@ export async function uploadFile(file: File): Promise<string>{
     return await getDownloadURL(storageRef);
 }
 
-export type {User, College, PeerGroup, Event, Profile, Resource};
+export async function suggestMatches(id: string){
+    const profile = await getProfile(id);
+
+    const academicSuggestionsSnapshot = await getDocs(query(Profiles, where("academic_preference", "array-contains-any", profile.academic_preference)))
+    const interestSuggestionsSnapshot = await getDocs(query(Profiles, where("interest", "array-contains-any", profile.interest)));
+
+    const suggestedProfiles = [];
+    for(const academicDoc of academicSuggestionsSnapshot.docs){
+        suggestedProfiles.push(academicDoc.data() as Profile)
+    }
+
+    for(const interestDoc of interestSuggestionsSnapshot.docs){
+        suggestedProfiles.push(interestDoc.data() as Profile)
+    }
+    
+    let suggestedUsers: Partial<User>[] = [];
+    for(const profile of suggestedProfiles){
+        suggestedUsers.push(await getUser(profile.userid))
+    }
+
+    if(suggestedUsers.length === 0){
+        suggestedUsers = (await getUsers() as Partial<User>[]).filter(user => !profile.matches.includes(user.id!)).slice(0, 5);
+    }
+
+    return suggestedUsers
+}
+
+export async function addMatches(id: string, matches: string[]){
+    await updateDoc(doc(db, "profiles", id), {
+        matches: matches
+    })
+}
+
+export async function addChat(users: string[]){
+    
+}
+
+export type {User, College, PeerGroup, Event, Profile, Resource, Chat, Message};

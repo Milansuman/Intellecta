@@ -10,11 +10,12 @@ export function NavBar({loggedIn, invalidateSession}: {loggedIn: boolean,  inval
             <div className="ml-auto flex flex-row gap-8 items-center text-lg font-medium">
                 <Link href="/">Home</Link>
                 <Link href="/events">Events</Link>
-                <Link href="/groups">Peer Groups</Link>
-                <Link href="/resources">Resources</Link>
                 {
                     loggedIn ? 
                     <>
+                        <Link href="/groups">Peer Groups</Link>
+                        <Link href="/resources">Resources</Link>
+                        <Link href="/chat">Chat</Link>
                         <Link href="/profile">Profile</Link>
                         <Button onClick={() => invalidateSession()}>Log Out</Button>
                     </>
