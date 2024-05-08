@@ -638,7 +638,33 @@ export async function addMatches(id: string, matches: string[]){
 }
 
 export async function addChat(users: string[]){
+    await addDoc(Chats, new Chat([], users));
+}
+
+export async function getChat(users: string[]){
+    const chatSnapshot = await getDocs(query(Chats, where("users", "array-contains-any", users)));
+
+    if(chatSnapshot.empty){
+        throw new Error("Chat does not exist");
+    }
+
+    const chat: Chat = chatSnapshot.docs[0].data() as Chat
+    return chat
+}
+
+export async function addMessage(users: string[], sender: string, content: string){
+    const chat = await getChat(users)
     
+    const messageSnapshot = await addDoc(Messages, new Message(sender, content));
+    await updateDoc(doc(db, "chats", chat.id!), {
+        messages: chat.messages.concat([messageSnapshot.id])
+    })
+}
+
+export async function getMessage(messageId: string){
+    const messageSnapshot = await getDocs(query(Messages, where(documentId(), "==", messageId)));
+
+    return messageSnapshot.docs[0].data() as Message
 }
 
 export type {User, College, PeerGroup, Event, Profile, Resource, Chat, Message};
