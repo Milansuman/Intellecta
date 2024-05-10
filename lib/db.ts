@@ -451,6 +451,14 @@ export async function getEvents() {
     return events;
 }
 
+export async function getEvent(name: string, date: Date){
+    const eventSnapshot = await getDocs(query(Events, where("name", "==", name)));
+    if(eventSnapshot.empty){
+        throw new Error("No events found");
+    }
+    return eventSnapshot.docs[0].data() as Event;
+}
+
 export async function addEvent(name: string, type: string, datetime: string, college_id: string){
     await addDoc(Events, new Event(name, type, datetime, college_id))
 }
