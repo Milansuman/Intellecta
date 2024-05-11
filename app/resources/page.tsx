@@ -58,7 +58,7 @@ export default async function Resources(){
                     </form>
                 </DialogContent>
             </Dialog>
-            <div className="flex flex-row gap-3 p-6">
+            <div className="flex flex-row gap-3 p-6 flex-wrap">
                 {
                     resources.map(resource => (
                         <Resource name={resource.name} url={resource.url} size={resource.size} tags={resource.tags} key={resource.id}/>

@@ -11,12 +11,12 @@ export function Resource({name, url, size, tags=[]}: {name: string, url: string,
             </div>
             <div className="flex flex-row gap-2 flex-wrap">
                 {
-                    tags.map(tag => (
+                    tags.filter(tag => tag !== "").map(tag => (
                         <Badge className="rounded-md" key={tag}>{tag}</Badge>
                     ))
                 }
             </div>
-            <Link href={url} download={name}>
+            <Link href={url} download={name} className="mt-auto">
                 <Button variant="outline">
                     Download
                 </Button>

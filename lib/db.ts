@@ -656,12 +656,21 @@ export async function getChat(users: string[]){
         throw new Error("Chat does not exist");
     }
 
-    const chat: Chat = chatSnapshot.docs[0].data() as Chat
-    return chat
+    for(let chat of chatSnapshot.docs){
+        if(users[0] in chat.data().users! && users[1] in chat.data().users!){
+            return chat.data() as Chat
+        }else{
+            throw new Error("Chat does not exist");
+        }
+    }
 }
 
 export async function addMessage(users: string[], sender: string, content: string){
     const chat = await getChat(users)
+
+    if(!chat){
+        throw new Error("Chat does not exist");
+    }
     
     const messageSnapshot = await addDoc(Messages, new Message(sender, content));
     await updateDoc(doc(db, "chats", chat.id!), {

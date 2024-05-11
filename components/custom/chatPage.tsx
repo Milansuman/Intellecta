@@ -5,6 +5,7 @@ import { useState, useEffect, FormEvent } from "react"
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Send } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function ChatPage({userId, profileId}: {userId: string, profileId: string}){
     const [matches, setMatches] = useState<Partial<User>[]>([]);
@@ -12,7 +13,10 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
     const [update, setUpdate] = useState(0)
     const [currentUser, setCurrentUser] = useState<string>();
     const [updateMessageCounter, setUpdateMessageCounter] = useState(0);
-    const [messages, setMessages] = useState<Message[]>();
+    const [messages, setMessages] = useState<{
+        user: string,
+        content: string
+    }[]>();
 
     useEffect(() => {
         (async () =>{
@@ -34,7 +38,11 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
                     const chat = await getChat([userId, currentUser!]);
                     const firebaseMessages = [];
                     for(let messageId of chat.messages){
-                        firebaseMessages.push(await getMessage(messageId));
+                        const message = await getMessage(messageId)
+                        firebaseMessages.push({
+                            user: (await getUser(message.userid)).email,
+                            content: message.content
+                        });
                     }
     
                     setMessages(firebaseMessages);
@@ -43,7 +51,11 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
                     const chat = await getChat([userId, currentUser!]);
                     const firebaseMessages = [];
                     for(let messageId of chat.messages){
-                        firebaseMessages.push(await getMessage(messageId));
+                        const message = await getMessage(messageId)
+                        firebaseMessages.push({
+                            user: (await getUser(message.userid)).email,
+                            content: message.content
+                        });
                     }
     
                     setMessages(firebaseMessages);
@@ -54,7 +66,12 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
     }, [currentUser, updateMessageCounter])
 
     const addMatchHandler = async (userId: string) => {
-        await addMatches(profileId, matches.map(match => match.id!).concat([userId]));
+        const newMatchesSet = (new Set(matches.map(match => match.id!).concat([userId])))
+        const newMatches: string[] = []
+        newMatchesSet.forEach((value) => {
+            newMatches.push(value)
+        })
+        await addMatches(profileId, [...newMatches]);
         setUpdate(update+1);
     }
 
@@ -74,18 +91,18 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
     return (
         <>
             <div className="flex flex-col p-6 border-r border-neutral-300 min-w-1/5">
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-2">
                     <h2 className="text-lg font-bold text-neutral-600">Matches</h2>
                     {
                         matches?.length === 0 ? <p className="py-3 text-neutral-400">No matches yet</p> : <></>
                     }
                     {
                         matches?.map(match => (
-                            <p className="p-2 rounded-md hover:bg-neutral-100 text-ellipsis" key={match.id} onClick={() => openChat(match.id!)}>{match.email}</p>
+                            <p className={cn("p-2 rounded-md hover:bg-neutral-100 text-ellipsis", match.id === currentUser ? "bg-neutral-100" : "")} key={match.id} onClick={() => openChat(match.id!)}>{match.email}</p>
                         ))
                     }
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-2">
                     <h2 className="text-lg font-bold text-neutral-600">Suggested Matches</h2>
                     {
                         suggestedMatches?.length === 0 ? <p className="py-3 text-neutral-400">No matches yet</p> : <></>
@@ -98,11 +115,11 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
                 </div>
             </div>
             <div className="flex flex-col w-full p-3">
-                <div className="flex flex-col h-full">
+                <div className="flex flex-col h-full gap-2">
                     {
-                        messages?.map(async (message) => (
-                            <div className="flex flex-col gap-2">
-                                <h3>{(await getUser(message.userid)).email}</h3>
+                        messages?.map((message) => (
+                            <div className="flex flex-col">
+                                <h3 className="font-bold text-sm">{message.user}</h3>
                                 <p>{message.content}</p>
                             </div>
                         ))
