@@ -451,7 +451,7 @@ export async function getEvents() {
     return events;
 }
 
-export async function getEvent(name: string, date: Date){
+export async function getEvent(name: string){
     const eventSnapshot = await getDocs(query(Events, where("name", "==", name)));
     if(eventSnapshot.empty){
         throw new Error("No events found");

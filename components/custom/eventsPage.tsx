@@ -25,7 +25,7 @@ import moment from 'moment'
 import "react-big-calendar/lib/css/react-big-calendar.css"
 import { getEvents, getColleges, getEvent, type Event as FireBaseEvent } from '@/lib/db'
 import {addEventHandler} from "@/app/events/actions"
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const localizer = momentLocalizer(moment)
 
@@ -47,7 +47,8 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
     const [selectedDate, setSelectedDate] = useState<Date>();
 
     const [viewOpen, setViewOpen] = useState(false);
-    const [selectedEvent, setSelectedEvent] = useState<FireBaseEvent>();
+    const [eventName, setEventName] = useState("")
+    const [selectedEvent, setSelectedEvent] = useState<FireBaseEvent | null>(null);
 
     useEffect(() => {
         const getEventsAction = async () => {
@@ -80,16 +81,22 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
         }
     }, [addOpen]);
 
+    useEffect(() => {
+        if(viewOpen){
+            (async () => {
+                setSelectedEvent(await getEvent(eventName))
+            })()
+        }
+    }, [viewOpen, eventName])
+
     const selectSlotHandler = (info: SlotInfo) => {
         setAddOpen(true);
         setSelectedDate(info.end);
     }
 
-    const selectEventHandler = async (event: Event) => {
+    const selectEventHandler = (event: Event) => {
         setViewOpen(true);
-        const firebaseEvent = await getEvent(event.title as string, event.end as Date)
-        console.log(firebaseEvent)
-        setSelectedEvent(firebaseEvent)
+        setEventName(event.title as string)
     }
 
     return (
@@ -143,7 +150,12 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                     </form>
                 </DialogContent>
             </Dialog>
-            <Dialog open={viewOpen} onOpenChange={(open) => setViewOpen(open)}>
+            <Dialog open={viewOpen} onOpenChange={(open) => {
+                if(!open){
+                    setSelectedEvent(null)
+                }
+                setViewOpen(open)
+            }}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>View Event</DialogTitle>
