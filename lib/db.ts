@@ -628,8 +628,11 @@ export async function suggestMatches(id: string){
     }
     
     let suggestedUsers: Partial<User>[] = [];
-    for(const profile of suggestedProfiles){
-        suggestedUsers.push(await getUser(profile.userid))
+    for(const suggestedProfile of suggestedProfiles){
+        if(profile.matches.includes(suggestedProfile.userid)){
+            continue;
+        }
+        suggestedUsers.push(await getUser(suggestedProfile.userid))
     }
 
     if(suggestedUsers.length === 0){
@@ -657,12 +660,13 @@ export async function getChat(users: string[]){
     }
 
     for(let chat of chatSnapshot.docs){
-        if(users[0] in chat.data().users! && users[1] in chat.data().users!){
+        console.log(chat.data())
+        if((chat.data().users as string[]).includes(users[0]) && (chat.data().users as string[]).includes(users[1])){
             return chat.data() as Chat
-        }else{
-            throw new Error("Chat does not exist");
         }
     }
+
+    throw new Error("Chat does not exist");
 }
 
 export async function addMessage(users: string[], sender: string, content: string){

@@ -19,7 +19,7 @@ export default async function Chat(){
     }
 
     return (
-        <main className="flex flex-row h-full">
+        <main className="flex flex-row h-full overflow-hidden">
             <ChatPage userId={profile.userid!} profileId={profile.id!}/>
         </main>
     )

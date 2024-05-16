@@ -37,7 +37,7 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
                 try {
                     const chat = await getChat([userId, currentUser!]);
                     const firebaseMessages = [];
-                    for(let messageId of chat.messages){
+                    for(let messageId of chat?.messages!){
                         const message = await getMessage(messageId)
                         firebaseMessages.push({
                             user: (await getUser(message.userid)).email,
@@ -50,7 +50,7 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
                     await addChat([userId, currentUser!])
                     const chat = await getChat([userId, currentUser!]);
                     const firebaseMessages = [];
-                    for(let messageId of chat.messages){
+                    for(let messageId of chat!.messages){
                         const message = await getMessage(messageId)
                         firebaseMessages.push({
                             user: (await getUser(message.userid)).email,
@@ -89,8 +89,8 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
 
 
     return (
-        <>
-            <div className="flex flex-col p-6 border-r border-neutral-300 min-w-1/5">
+        <div className="flex flex-row h-full max-h-full w-full">
+            <div className="flex flex-col p-6 border-r border-neutral-300 w-fit overflow-y-auto overflow-x-hidden">
                 <div className="flex flex-col gap-2">
                     <h2 className="text-lg font-bold text-neutral-600">Matches</h2>
                     {
@@ -98,7 +98,7 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
                     }
                     {
                         matches?.map(match => (
-                            <p className={cn("p-2 rounded-md hover:bg-neutral-100 text-ellipsis", match.id === currentUser ? "bg-neutral-100" : "")} key={match.id} onClick={() => openChat(match.id!)}>{match.email}</p>
+                            <p className={cn("p-2 rounded-md hover:bg-neutral-100 overflow-hidden text-ellipsis", match.id === currentUser ? "bg-neutral-100" : "")} key={match.id} onClick={() => openChat(match.id!)}>{match.email}</p>
                         ))
                     }
                 </div>
@@ -109,7 +109,7 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
                     }
                     {
                         suggestedMatches?.map(match => (
-                            <p className="p-2 rounded-md hover:bg-neutral-100 text-ellipsis" key={match.id} onClick={() => addMatchHandler(match.id!)}>{match.email}</p>
+                            <p className="p-2 rounded-md hover:bg-neutral-100 overflow-hidden text-ellipsis" key={match.id} onClick={() => addMatchHandler(match.id!)}>{match.email}</p>
                         ))
                     }
                 </div>
@@ -132,6 +132,6 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
                     </Button>
                 </form>
             </div>
-        </>
+        </div>
     )
 }
