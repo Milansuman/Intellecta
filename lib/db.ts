@@ -635,8 +635,16 @@ export async function suggestMatches(id: string){
         suggestedUsers.push(await getUser(suggestedProfile.userid))
     }
 
-    if(suggestedUsers.length === 0){
-        suggestedUsers = (await getUsers() as Partial<User>[]).filter(user => !profile.matches.includes(user.id!)).slice(0, 5);
+    const isUserExists = (user: Partial<User>) => {
+        for(let suggestedUser of suggestedUsers){
+            if(suggestedUser.id === user.id)
+                return true;
+        }
+        return false;
+    }
+
+    if(suggestedUsers.length === 0 || suggestedUsers.length < 5){
+        suggestedUsers = suggestedUsers.concat((await getUsers() as Partial<User>[]).filter(user => !profile.matches.includes(user.id!) && !isUserExists(user)).slice(0, 5-suggestedUsers.length));
     }
 
     return suggestedUsers
@@ -646,6 +654,20 @@ export async function addMatches(id: string, matches: string[]){
     await updateDoc(doc(db, "profiles", id), {
         matches: matches
     })
+
+    for(let match of matches){
+        const profileSnapshot = await getDocs(query(Profiles, where("userid", "==", match)));
+        const profile = profileSnapshot.docs[0].data();
+
+        const newProfileMatches: string[] = [];
+
+        (new Set(profile.matches as string[]).add(matches.at(-1) as string)).forEach((newProfile) => {
+            newProfileMatches.push(newProfile);
+        })
+        await updateDoc(doc(db, "profiles", profile.id as string), {
+            matches: newProfileMatches
+        })
+    }
 }
 
 export async function addChat(users: string[]){
