@@ -127,8 +127,8 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
                 }
                 <div className="flex flex-col h-full gap-2 p-3 overflow-y-auto">
                     {
-                        messages?.map((message) => (
-                            <div className="flex flex-col">
+                        messages?.map((message, index) => (
+                            <div className="flex flex-col" key={message.content + String(index)}>
                                 <h3 className="font-bold text-sm">{message.user}</h3>
                                 <p>{message.content}</p>
                             </div>
