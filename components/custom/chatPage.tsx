@@ -12,6 +12,7 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
     const [suggestedMatches, setSuggestedMatches] = useState<Partial<User>[]>([]);
     const [update, setUpdate] = useState(0)
     const [currentUser, setCurrentUser] = useState<string>();
+    const [currentUserDetails, setCurrentUserDetails] = useState<Partial<User>>();
     const [updateMessageCounter, setUpdateMessageCounter] = useState(0);
     const [messages, setMessages] = useState<{
         user: string,
@@ -34,6 +35,7 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
     useEffect(() => {
         if(currentUser){
             (async () => {
+                setCurrentUserDetails(await getUser(currentUser));
                 try {
                     const chat = await getChat([userId, currentUser!]);
                     const firebaseMessages = [];
@@ -114,8 +116,16 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
                     }
                 </div>
             </div>
-            <div className="flex flex-col w-full p-3">
-                <div className="flex flex-col h-full gap-2">
+            <div className="flex flex-col w-full">
+                {
+                    currentUser && 
+                    <div className="w-full p-3 border-b border-neutral-300">
+                        <p className="p-2 rounded-full font-bold bg-blue-50 w-fit text-sm text-blue-700">
+                            {currentUserDetails?.email}
+                        </p>
+                    </div>
+                }
+                <div className="flex flex-col h-full gap-2 p-3 overflow-y-auto">
                     {
                         messages?.map((message) => (
                             <div className="flex flex-col">
@@ -125,7 +135,7 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
                         ))
                     }
                 </div>
-                <form className="flex flex-row gap-2 w-full" onSubmit={(ev) => sendMessage(ev)}>
+                <form className="flex flex-row gap-2 w-full p-3" onSubmit={(ev) => sendMessage(ev)}>
                     <Input name="message" placeholder="Type a message"/>
                     <Button type="submit">
                         <Send/>
