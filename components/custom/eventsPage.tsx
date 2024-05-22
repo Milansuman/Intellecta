@@ -24,8 +24,8 @@ import { Calendar, momentLocalizer, Views, type View, type Event, type SlotInfo 
 import moment from 'moment'
 import "react-big-calendar/lib/css/react-big-calendar.css"
 import { getEvents, getColleges, getEvent, type Event as FireBaseEvent } from '@/lib/db'
-import {addEventHandler} from "@/app/events/actions"
-import { useState, useEffect, useRef } from 'react'
+import {addEventHandler, deleteEventHandler, updateEventHandler} from "@/app/events/actions"
+import { useState, useEffect } from 'react'
 
 const localizer = momentLocalizer(moment)
 
@@ -38,6 +38,7 @@ type College = {
 }
 
 export function EventsPage({isAdmin}: {isAdmin: boolean}){
+    const [pageKey, setPageKey] = useState(0);
     const [view, setView] = useState<View | undefined>(Views.MONTH);
     const [date, setDate] = useState(new Date());
     const [events, setEvents] = useState<Event[]>();
@@ -49,6 +50,10 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
     const [viewOpen, setViewOpen] = useState(false);
     const [eventName, setEventName] = useState("")
     const [selectedEvent, setSelectedEvent] = useState<FireBaseEvent | null>(null);
+
+    useEffect(() => {
+        setPageKey(pageKey+1);
+    }, [])
 
     useEffect(() => {
         const getEventsAction = async () => {
@@ -99,10 +104,16 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
         setEventName(event.title as string)
     }
 
+    const deleteEvent = (id: string) => {
+        deleteEventHandler(id);
+        setViewOpen(false);
+    }
+
     return (
         <main className='flex flex-col h-full'>
             <div className='h-full p-6'>
             <Calendar
+                key={pageKey}
                 localizer={localizer}
                 startAccessor="start"
                 endAccessor="end"
@@ -132,7 +143,7 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                         <Label>Date & Time</Label>
                         <Input type="date" name="datetime" defaultValue={selectedDate?.toISOString().substring(0,10)} required/>
                         <Label>College</Label>
-                        <Select>
+                        <Select name="college">
                             <SelectTrigger>
                                 <SelectValue placeholder="Select your college"/>
                             </SelectTrigger>
@@ -160,7 +171,8 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                     <DialogHeader>
                         <DialogTitle>View Event</DialogTitle>
                     </DialogHeader>
-                    <form onSubmit={() => setViewOpen(false)} className="flex flex-col gap-3">
+                    <form onSubmit={() => setViewOpen(false)} action={updateEventHandler} className="flex flex-col gap-3">
+                        <input name="id" value={selectedEvent?.id!} className="hidden"/>
                         <Label>Name</Label>
                         <Input name="name" placeholder="Event name" className="disabled:opacity-100" defaultValue={selectedEvent?.name as string} disabled={!isAdmin} required/>
                         <Label>Type</Label>
@@ -168,7 +180,7 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                         <Label>Date & Time</Label>
                         <Input type="date" name="datetime" className="disabled:opacity-100" defaultValue={selectedEvent?.datetime} disabled={!isAdmin} required/>
                         <Label>College</Label>
-                        <Select defaultValue={selectedEvent?.college_id as string} disabled={!isAdmin}>
+                        <Select name="college" defaultValue={selectedEvent?.college_id as string} disabled={!isAdmin}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select your college"/>
                             </SelectTrigger>
@@ -180,9 +192,12 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                                 }
                             </SelectContent>
                         </Select>
-                        <div>
+                        <div className="flex flex-row gap-2">
                             {
                                 isAdmin && <Button type="submit">Update event</Button>
+                            }
+                            {
+                                isAdmin && <Button variant="destructive" type="button" onClick={() => deleteEvent(selectedEvent?.id!)}>Delete event</Button>
                             }
                         </div>
                     </form>

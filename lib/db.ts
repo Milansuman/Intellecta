@@ -463,6 +463,19 @@ export async function addEvent(name: string, type: string, datetime: string, col
     await addDoc(Events, new Event(name, type, datetime, college_id))
 }
 
+export async function updateEvent(id: string, name: string, type: string, datetime: string, college_id: string){
+    await updateDoc(doc(db, "events", id), {
+        name: name,
+        type: type,
+        datetime: datetime,
+        college_id: college_id
+    });
+}
+
+export async function deleteEvent(id: string){
+    await deleteDoc(doc(db, "events", id));
+}
+
 export async function getColleges(){
     const colleges: DocumentData = [];
     const q = query(Colleges)

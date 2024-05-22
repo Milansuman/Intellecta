@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getUser, verifyToken } from "@/lib/db";
+import "react-big-calendar/lib/css/react-big-calendar.css"
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
