@@ -669,7 +669,13 @@ export async function addMatches(id: string, matches: string[]){
     })
 
     for(let match of matches){
+        console.log(match)
         const profileSnapshot = await getDocs(query(Profiles, where("userid", "==", match)));
+        console.log(profileSnapshot.docs[0]?.data())
+        if(!profileSnapshot.docs[0]){
+            continue;
+        }
+
         const profile = profileSnapshot.docs[0].data();
 
         const newProfileMatches: string[] = [];
@@ -677,6 +683,7 @@ export async function addMatches(id: string, matches: string[]){
         (new Set(profile.matches as string[]).add(matches.at(-1) as string)).forEach((newProfile) => {
             newProfileMatches.push(newProfile);
         })
+        console.log(newProfileMatches)
         await updateDoc(doc(db, "profiles", profile.id as string), {
             matches: newProfileMatches
         })
@@ -691,17 +698,32 @@ export async function getChat(users: string[]){
     const chatSnapshot = await getDocs(query(Chats, where("users", "array-contains-any", users)));
 
     if(chatSnapshot.empty){
-        throw new Error("Chat does not exist");
+        await addChat(users);
+        return await getChat(users);
     }
 
     for(let chat of chatSnapshot.docs){
-        console.log(chat.data())
-        if((chat.data().users as string[]).includes(users[0]) && (chat.data().users as string[]).includes(users[1])){
+        let isChat: boolean = true;
+
+        if(users.length !== (chat.data().users as string[]).length){
+            isChat = false
+            await addChat(users);
+            return await getChat(users);
+        }
+
+        for(const user of users){
+            if(!(chat.data().users as string[]).includes(user)){
+                isChat = false;
+                await addChat(users);
+                return await getChat(users);
+            }
+        }
+
+        if(isChat){
             return chat.data() as Chat
         }
     }
-
-    throw new Error("Chat does not exist");
+    
 }
 
 export async function addMessage(users: string[], sender: string, content: string){

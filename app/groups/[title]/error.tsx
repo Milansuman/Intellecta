@@ -10,6 +10,7 @@ export default function Error({
     error: Error & { digest?: string }
     reset: () => void
 }){
+    
     return (
         <main className="flex flex-col justify-center items-center h-full gap-4">
             <h1 className="text-2xl font-bold">An error occurred!</h1>
