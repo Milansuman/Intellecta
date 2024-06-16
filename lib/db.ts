@@ -23,15 +23,25 @@ import {getStorage, ref, uploadBytes, getDownloadURL} from "firebase/storage"
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+// const firebaseConfig = {
+//     apiKey: "AIzaSyBIXjCazFjCaHH-jyONjHH66vX1tSFjf5U",
+//     authDomain: "intellecta-e4131.firebaseapp.com",
+//     projectId: "intellecta-e4131",
+//     storageBucket: "intellecta-e4131.appspot.com",
+//     messagingSenderId: "1014338758665",
+//     appId: "1:1014338758665:web:a95be90e839e525c2070d8",
+//     measurementId: "G-BY9KJDKFDZ",
+// };
+
 const firebaseConfig = {
-    apiKey: "AIzaSyBIXjCazFjCaHH-jyONjHH66vX1tSFjf5U",
-    authDomain: "intellecta-e4131.firebaseapp.com",
-    projectId: "intellecta-e4131",
-    storageBucket: "intellecta-e4131.appspot.com",
-    messagingSenderId: "1014338758665",
-    appId: "1:1014338758665:web:a95be90e839e525c2070d8",
-    measurementId: "G-BY9KJDKFDZ",
-};
+    apiKey: "AIzaSyB7hzVFo0smUCrrmp33d_Ze4L1Eo9NHFeU",
+    authDomain: "intellecta-c9d8c.firebaseapp.com",
+    projectId: "intellecta-c9d8c",
+    storageBucket: "intellecta-c9d8c.appspot.com",
+    messagingSenderId: "20142520732",
+    appId: "1:20142520732:web:68f9f561cc19bd8166f059",
+    measurementId: "G-8ZTSVZGPT3"
+  };
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
@@ -429,7 +439,10 @@ export async function register(email: string, password: string, dob: string) {
     }
 
     // Add user to Firestore
-    await addDoc(Users, new User(email, hashedPassword, dob))
+    const newUserRef = await addDoc(Users, new User(email, hashedPassword, dob))
+    const newUserSnapshot = await getDoc(newUserRef);
+    const newUser = newUserSnapshot.data();
+    await addProfile(newUser?.id as string, newUser?.email as string, newUser?.dob as string, "", "");
 }
 
 export async function getEvents() {
@@ -619,6 +632,14 @@ export async function addResource(file: File, tags: string[]){
     await addDoc(Resources, new Resource(file.name, url, file.size, null, tags));
 }
 
+export async function deleteResource(url: string){
+    const resourceSnapshot = await getDocs(query(Resources, where("url", "==", url)));
+
+    if(!resourceSnapshot.empty){
+        await deleteDoc(doc(db, "resources", resourceSnapshot.docs[0].id));
+    }
+}
+
 export async function uploadFile(file: File): Promise<string>{
     const storageRef = ref(storage, file.name);
     await uploadBytes(storageRef, file)
@@ -668,8 +689,11 @@ export async function addMatches(id: string, matches: string[]){
         matches: matches
     })
 
+    const userProfileSnapshot = await getDocs(query(Profiles, where(documentId(), "==", id)));
+    const userid = userProfileSnapshot.docs[0].data()?.userid;
+
     for(let match of matches){
-        console.log(match)
+        if(match == userid) continue;
         const profileSnapshot = await getDocs(query(Profiles, where("userid", "==", match)));
         console.log(profileSnapshot.docs[0]?.data())
         if(!profileSnapshot.docs[0]){
@@ -680,7 +704,7 @@ export async function addMatches(id: string, matches: string[]){
 
         const newProfileMatches: string[] = [];
 
-        (new Set(profile.matches as string[]).add(matches.at(-1) as string)).forEach((newProfile) => {
+        (new Set(profile.matches as string[]).add(userid as string)).forEach((newProfile) => {
             newProfileMatches.push(newProfile);
         })
         console.log(newProfileMatches)
@@ -691,15 +715,16 @@ export async function addMatches(id: string, matches: string[]){
 }
 
 export async function addChat(users: string[]){
-    await addDoc(Chats, new Chat([], users));
+    const chatRef = await addDoc(Chats, new Chat([], users));
+    const chatSnapshot = await getDoc(chatRef);
+    return chatSnapshot.data() as Chat
 }
 
 export async function getChat(users: string[]){
     const chatSnapshot = await getDocs(query(Chats, where("users", "array-contains-any", users)));
 
     if(chatSnapshot.empty){
-        await addChat(users);
-        return await getChat(users);
+        return await addChat(users);
     }
 
     for(let chat of chatSnapshot.docs){
@@ -707,15 +732,13 @@ export async function getChat(users: string[]){
 
         if(users.length !== (chat.data().users as string[]).length){
             isChat = false
-            await addChat(users);
-            return await getChat(users);
+            return await addChat(users);
         }
 
         for(const user of users){
             if(!(chat.data().users as string[]).includes(user)){
                 isChat = false;
-                await addChat(users);
-                return await getChat(users);
+                return await addChat(users);
             }
         }
 
