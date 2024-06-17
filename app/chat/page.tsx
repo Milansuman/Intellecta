@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { verifyToken, getProfile, getUser, suggestMatches, addMatches, type Profile, type User} from "@/lib/db";
 import { redirect } from "next/navigation";
 import { ChatPage } from "@/components/custom/chatPage";
+import Providers from "@/components/custom/provider";
 
 export default async function Chat(){
     let profile: Profile;
@@ -20,7 +21,9 @@ export default async function Chat(){
 
     return (
         <main className="flex flex-row h-full overflow-hidden">
-            <ChatPage userId={profile.userid!} profileId={profile.id!}/>
+            <Providers>
+                <ChatPage userId={profile.userid!} profileId={profile.id!}/>
+            </Providers>
         </main>
     )
 }

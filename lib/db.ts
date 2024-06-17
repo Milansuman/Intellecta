@@ -23,15 +23,25 @@ import {getStorage, ref, uploadBytes, getDownloadURL} from "firebase/storage"
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+// const firebaseConfig = {
+//     apiKey: "AIzaSyBIXjCazFjCaHH-jyONjHH66vX1tSFjf5U",
+//     authDomain: "intellecta-e4131.firebaseapp.com",
+//     projectId: "intellecta-e4131",
+//     storageBucket: "intellecta-e4131.appspot.com",
+//     messagingSenderId: "1014338758665",
+//     appId: "1:1014338758665:web:a95be90e839e525c2070d8",
+//     measurementId: "G-BY9KJDKFDZ",
+// };
+
 const firebaseConfig = {
-    apiKey: "AIzaSyBIXjCazFjCaHH-jyONjHH66vX1tSFjf5U",
-    authDomain: "intellecta-e4131.firebaseapp.com",
-    projectId: "intellecta-e4131",
-    storageBucket: "intellecta-e4131.appspot.com",
-    messagingSenderId: "1014338758665",
-    appId: "1:1014338758665:web:a95be90e839e525c2070d8",
-    measurementId: "G-BY9KJDKFDZ",
-};
+    apiKey: "AIzaSyB7hzVFo0smUCrrmp33d_Ze4L1Eo9NHFeU",
+    authDomain: "intellecta-c9d8c.firebaseapp.com",
+    projectId: "intellecta-c9d8c",
+    storageBucket: "intellecta-c9d8c.appspot.com",
+    messagingSenderId: "20142520732",
+    appId: "1:20142520732:web:68f9f561cc19bd8166f059",
+    measurementId: "G-8ZTSVZGPT3"
+  };
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
@@ -714,28 +724,23 @@ export async function getChat(users: string[]){
     const chatSnapshot = await getDocs(query(Chats, where("users", "array-contains-any", users)));
 
     if(chatSnapshot.empty){
+        console.log("empty")
         return await addChat(users);
     }
 
     for(let chat of chatSnapshot.docs){
-        let isChat: boolean = true;
+        if(users.length === (chat.data().users as string[]).length){
+            const isChat = (chat.data().users as string[]).every((user) => {
+                return users.includes(user);
+            })
 
-        if(users.length !== (chat.data().users as string[]).length){
-            isChat = false
-            return await addChat(users);
-        }
-
-        for(const user of users){
-            if(!(chat.data().users as string[]).includes(user)){
-                isChat = false;
-                return await addChat(users);
+            if(isChat){
+                return chat.data() as Chat;
             }
         }
-
-        if(isChat){
-            return chat.data() as Chat
-        }
     }
+
+    return await addChat(users);
     
 }
 
