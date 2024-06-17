@@ -35,7 +35,7 @@ export async function Resource({name, url, size, tags=[]}: {name: string, url: s
                     ))
                 }
             </div>
-            <div className="flex flex-row gap-3">
+            <div className="flex flex-row gap-3 mt-auto">
                 <Link href={url} download={name} className="mt-auto">
                     <Button variant="outline">
                         Download

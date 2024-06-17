@@ -428,6 +428,29 @@ export async function login(email: string, password: string): Promise<string> {
     return token
 }
 
+export async function adminLogin(email: string, password: string): Promise<string> {
+    const q = query(Users, where('email', '==', email))
+    const usersRef = await getDocs(q)
+    if (usersRef.empty) {
+        throw new Error("User not found");
+    }
+    const userDoc = usersRef.docs[0];
+    const user = userDoc.data();
+
+    if(!user.is_admin) throw new Error("User not found");
+
+    // Verify password
+    const validPassword = await bcrypt.compare(password, user.password as string);
+    if (!validPassword) {
+        throw new Error("Invalid password");
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id: userDoc.id }, 'secretkey');
+
+    return token
+}
+
 export async function register(email: string, password: string, dob: string) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
