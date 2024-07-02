@@ -26,6 +26,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css"
 import { getEvents, getColleges, getEvent, type Event as FireBaseEvent } from '@/lib/db'
 import {addEventHandler, deleteEventHandler, updateEventHandler} from "@/app/events/actions"
 import { useState, useEffect } from 'react'
+import { useRouter } from "next/navigation"
 
 const localizer = momentLocalizer(moment)
 
@@ -50,6 +51,8 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
     const [viewOpen, setViewOpen] = useState(false);
     const [eventName, setEventName] = useState("")
     const [selectedEvent, setSelectedEvent] = useState<FireBaseEvent | null>(null);
+
+    const router = useRouter();
 
     useEffect(() => {
         setPageKey(pageKey+1);
@@ -135,7 +138,10 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                     <DialogHeader>
                         <DialogTitle>Add an event</DialogTitle>
                     </DialogHeader>
-                    <form method="POST" action={addEventHandler} onSubmit={() => setAddOpen(false)} className="flex flex-col gap-3">
+                    <form method="POST" action={addEventHandler} onSubmit={() => {
+                        setAddOpen(false);
+                        router.refresh();
+                    }} className="flex flex-col gap-3">
                         <Label>Name</Label>
                         <Input name="name" placeholder="Event name" required/>
                         <Label>Type</Label>
@@ -171,7 +177,10 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                     <DialogHeader>
                         <DialogTitle>View Event</DialogTitle>
                     </DialogHeader>
-                    <form onSubmit={() => setViewOpen(false)} action={updateEventHandler} className="flex flex-col gap-3">
+                    <form onSubmit={() => {
+                        setViewOpen(false);
+                        router.refresh();
+                    }} action={updateEventHandler} className="flex flex-col gap-3">
                         <input name="id" value={selectedEvent?.id!} className="hidden"/>
                         <Label>Name</Label>
                         <Input name="name" placeholder="Event name" className="disabled:opacity-100" defaultValue={selectedEvent?.name as string} disabled={!isAdmin} required/>

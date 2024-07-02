@@ -7,6 +7,8 @@ import { Button } from "../ui/button";
 import { Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import {useQuery, useQueryClient} from "@tanstack/react-query";
+
 export function ChatPage({userId, profileId}: {userId: string, profileId: string}){
     const [matches, setMatches] = useState<Partial<User>[]>([]);
     const [suggestedMatches, setSuggestedMatches] = useState<Partial<User>[]>([]);
@@ -14,10 +16,29 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
     const [currentUser, setCurrentUser] = useState<string>();
     const [currentUserDetails, setCurrentUserDetails] = useState<Partial<User>>();
     const [updateMessageCounter, setUpdateMessageCounter] = useState(0);
-    const [messages, setMessages] = useState<{
-        user: string,
-        content: string
-    }[]>();
+    // const [messages, setMessages] = useState<{
+    //     user: string,
+    //     content: string
+    // }[]>();
+
+    const client = useQueryClient();
+
+    const messages = useQuery({
+        queryKey: ["messages"],
+        queryFn: async () => {
+            const chat = await getChat([userId, currentUser!]);
+            const firebaseMessages = [];
+            for(let messageId of chat?.messages!){
+                const message = await getMessage(messageId)
+                firebaseMessages.push({
+                    user: (await getUser(message.userid)).email,
+                    content: message.content
+                });
+            }
+            return firebaseMessages;
+        },
+        refetchInterval: 200
+    })
 
     useEffect(() => {
         (async () =>{
@@ -36,33 +57,6 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
         if(currentUser){
             (async () => {
                 setCurrentUserDetails(await getUser(currentUser));
-                try {
-                    const chat = await getChat([userId, currentUser!]);
-                    const firebaseMessages = [];
-                    for(let messageId of chat?.messages!){
-                        const message = await getMessage(messageId)
-                        firebaseMessages.push({
-                            user: (await getUser(message.userid)).email,
-                            content: message.content
-                        });
-                    }
-    
-                    setMessages(firebaseMessages);
-                } catch (error) {
-                    await addChat([userId, currentUser!])
-                    const chat = await getChat([userId, currentUser!]);
-                    const firebaseMessages = [];
-                    for(let messageId of chat!.messages){
-                        const message = await getMessage(messageId)
-                        firebaseMessages.push({
-                            user: (await getUser(message.userid)).email,
-                            content: message.content
-                        });
-                    }
-    
-                    setMessages(firebaseMessages);
-                }
-    
             })()
         }
     }, [currentUser, updateMessageCounter])
@@ -127,7 +121,7 @@ export function ChatPage({userId, profileId}: {userId: string, profileId: string
                 }
                 <div className="flex flex-col h-full gap-2 p-3 overflow-y-auto">
                     {
-                        messages?.map((message, index) => (
+                        messages.data?.map((message, index) => (
                             <div className="flex flex-col" key={message.content + String(index)}>
                                 <h3 className="font-bold text-sm">{message.user}</h3>
                                 <p>{message.content}</p>
