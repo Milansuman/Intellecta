@@ -27,6 +27,7 @@ import { getEvents, getColleges, getEvent, type Event as FireBaseEvent } from '@
 import {addEventHandler, deleteEventHandler, updateEventHandler} from "@/app/events/actions"
 import { useState, useEffect } from 'react'
 import { useRouter } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
 
 const localizer = momentLocalizer(moment)
 
@@ -42,7 +43,7 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
     const [pageKey, setPageKey] = useState(0);
     const [view, setView] = useState<View | undefined>(Views.MONTH);
     const [date, setDate] = useState(new Date());
-    const [events, setEvents] = useState<Event[]>();
+    //const [events, setEvents] = useState<Event[]>();
     const [colleges, setColleges] = useState<College[]>();
 
     const [addOpen, setAddOpen] = useState(false);
@@ -53,6 +54,31 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
     const [selectedEvent, setSelectedEvent] = useState<FireBaseEvent | null>(null);
 
     const router = useRouter();
+
+    const events = useQuery({
+        queryKey: ["events"],
+        queryFn: async () => {
+            const firebaseEvents = await getEvents() as {
+                id: string,
+                college_id: string,
+                datetime: string,
+                url: string,
+                name: string,
+                type: string
+            }[];
+
+            const eventsList = []
+            for(let event of firebaseEvents){
+                eventsList.push({
+                    title: event.name,
+                    start: new Date(event.datetime),
+                    end: new Date(event.datetime)
+                })
+            }
+            return eventsList
+        },
+        refetchInterval: 1500
+    })
 
     useEffect(() => {
         setPageKey(pageKey+1);
@@ -82,7 +108,7 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                     end: new Date(event.datetime)
                 })
             }
-            setEvents(eventsList)
+            //setEvents(eventsList)
         }
 
         const getCollegesList = async () => {
@@ -91,7 +117,7 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
 
         if(!addOpen){
             getCollegesList();
-            getEventsAction();   
+            //getEventsAction();   
         }
     }, [addOpen]);
 
@@ -127,7 +153,7 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                 startAccessor="start"
                 endAccessor="end"
                 defaultView={view}
-                events={events}
+                events={events.data!}
                 view={view} // Include the view prop
                 date={date} // Include the date prop
                 onView={(view: View): void => setView(view)}
