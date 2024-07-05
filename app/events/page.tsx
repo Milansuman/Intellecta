@@ -1,6 +1,7 @@
 import {EventsPage} from "@/components/custom/eventsPage"
 import { cookies } from "next/headers";
 import { verifyToken, getUser } from "@/lib/db";
+import Providers from "@/components/custom/provider";
 
 export default async function Events(){
     let isAdmin = false;
@@ -10,6 +11,8 @@ export default async function Events(){
     }
 
     return (
-        <EventsPage isAdmin={isAdmin}/>
+        <Providers>
+            <EventsPage isAdmin={isAdmin}/>
+        </Providers>
     )
 }
