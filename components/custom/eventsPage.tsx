@@ -56,6 +56,11 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
 
     useEffect(() => {
         setPageKey(pageKey+1);
+
+        const getCollegesList = async () => {
+            setColleges(await getColleges() as College[]);
+        }
+        getCollegesList()
     }, [])
 
     useEffect(() => {
@@ -64,6 +69,7 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                 id: string,
                 college_id: string,
                 datetime: string,
+                url: string,
                 name: string,
                 type: string
             }[];
@@ -161,6 +167,8 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                                 }
                             </SelectContent>
                         </Select>
+                        <Label>Event URL</Label>
+                        <Input type="url" name="url" placeholder="https://example.com"/>
                         <div>
                             <Button type="submit">Add event</Button>
                         </div>
@@ -189,7 +197,7 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                         <Label>Date & Time</Label>
                         <Input type="date" name="datetime" className="disabled:opacity-100" defaultValue={selectedEvent?.datetime} disabled={!isAdmin} required/>
                         <Label>College</Label>
-                        <Select name="college" defaultValue={selectedEvent?.college_id as string} disabled={!isAdmin}>
+                        <Select name="college" defaultValue={selectedEvent?.college_id as string} disabled={!isAdmin} key={selectedEvent?.id as string}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select your college"/>
                             </SelectTrigger>
@@ -201,6 +209,8 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                                 }
                             </SelectContent>
                         </Select>
+                        <Label>Event URL</Label>
+                        <Input type="url" name="url" placeholder="https://example.com" defaultValue={selectedEvent?.url!}/>
                         <div className="flex flex-row gap-2">
                             {
                                 isAdmin && <Button type="submit">Update event</Button>

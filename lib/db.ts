@@ -23,25 +23,25 @@ import {getStorage, ref, uploadBytes, getDownloadURL} from "firebase/storage"
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBIXjCazFjCaHH-jyONjHH66vX1tSFjf5U",
-    authDomain: "intellecta-e4131.firebaseapp.com",
-    projectId: "intellecta-e4131",
-    storageBucket: "intellecta-e4131.appspot.com",
-    messagingSenderId: "1014338758665",
-    appId: "1:1014338758665:web:a95be90e839e525c2070d8",
-    measurementId: "G-BY9KJDKFDZ",
-};
-
 // const firebaseConfig = {
-//     apiKey: "AIzaSyB7hzVFo0smUCrrmp33d_Ze4L1Eo9NHFeU",
-//     authDomain: "intellecta-c9d8c.firebaseapp.com",
-//     projectId: "intellecta-c9d8c",
-//     storageBucket: "intellecta-c9d8c.appspot.com",
-//     messagingSenderId: "20142520732",
-//     appId: "1:20142520732:web:68f9f561cc19bd8166f059",
-//     measurementId: "G-8ZTSVZGPT3"
-//   };
+//     apiKey: "AIzaSyBIXjCazFjCaHH-jyONjHH66vX1tSFjf5U",
+//     authDomain: "intellecta-e4131.firebaseapp.com",
+//     projectId: "intellecta-e4131",
+//     storageBucket: "intellecta-e4131.appspot.com",
+//     messagingSenderId: "1014338758665",
+//     appId: "1:1014338758665:web:a95be90e839e525c2070d8",
+//     measurementId: "G-BY9KJDKFDZ",
+// };
+
+const firebaseConfig = {
+    apiKey: "AIzaSyB7hzVFo0smUCrrmp33d_Ze4L1Eo9NHFeU",
+    authDomain: "intellecta-c9d8c.firebaseapp.com",
+    projectId: "intellecta-c9d8c",
+    storageBucket: "intellecta-c9d8c.appspot.com",
+    messagingSenderId: "20142520732",
+    appId: "1:20142520732:web:68f9f561cc19bd8166f059",
+    measurementId: "G-8ZTSVZGPT3"
+  };
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
@@ -150,6 +150,7 @@ const Profiles = collection(db, "profiles").withConverter(profileConverter());
 class Event {
     name: string;
     type: string;
+    url: string | null;
     datetime: string;
     college_id: string | null;
     college: College | null;
@@ -161,6 +162,7 @@ class Event {
         datetime: string,
         college_id: string | null = null,
         college: College | null = null,
+        url: string | null = null,
         id: string | null = null,
     ) {
         this.id = id;
@@ -173,6 +175,7 @@ class Event {
         }else{
             this.college = null;
         }
+        this.url = url;
     }
 
     toString(): string {
@@ -187,6 +190,7 @@ const eventConverter = () => ({
             type: event.type,
             datetime: event.datetime,
             college_id: event.college_id,
+            url: event.url
         };
     },
     fromFirestore(snapshot: QueryDocumentSnapshot): Event {
@@ -197,6 +201,7 @@ const eventConverter = () => ({
             data.datetime,
             data.college_id,
             null,
+            data.url,
             snapshot.id,
         );
     },
@@ -495,16 +500,17 @@ export async function getEvent(name: string){
     return eventSnapshot.docs[0].data() as Event;
 }
 
-export async function addEvent(name: string, type: string, datetime: string, college_id: string){
-    await addDoc(Events, new Event(name, type, datetime, college_id))
+export async function addEvent(name: string, type: string, datetime: string, college_id: string, url: string){
+    await addDoc(Events, new Event(name, type, datetime, college_id, null, url))
 }
 
-export async function updateEvent(id: string, name: string, type: string, datetime: string, college_id: string){
+export async function updateEvent(id: string, name: string, type: string, datetime: string, college_id: string, url: string){
     await updateDoc(doc(db, "events", id), {
         name: name,
         type: type,
         datetime: datetime,
-        college_id: college_id
+        college_id: college_id,
+        url: url
     });
 }
 
