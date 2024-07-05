@@ -27,7 +27,7 @@ export default function ResourcePage({resources, isAdmin}: {resources: any[], is
         queryFn: async () => {
             return await getResources()
         },
-        refetchInterval: 1000
+        refetchInterval: 1500
     })
 
     return (

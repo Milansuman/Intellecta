@@ -64,6 +64,7 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                 id: string,
                 college_id: string,
                 datetime: string,
+                url: string,
                 name: string,
                 type: string
             }[];
@@ -161,6 +162,8 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                                 }
                             </SelectContent>
                         </Select>
+                        <Label>Event URL</Label>
+                        <Input type="url" name="url" placeholder="https://example.com"/>
                         <div>
                             <Button type="submit">Add event</Button>
                         </div>
@@ -201,6 +204,8 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                                 }
                             </SelectContent>
                         </Select>
+                        <Label>Event URL</Label>
+                        <Input type="url" name="url" placeholder="https://example.com" defaultValue={selectedEvent?.url!}/>
                         <div className="flex flex-row gap-2">
                             {
                                 isAdmin && <Button type="submit">Update event</Button>
