@@ -22,8 +22,9 @@ import { useQuery } from "@tanstack/react-query"
 
 export default function ResourcePage({resources, isAdmin}: {resources: any[], isAdmin: boolean}){
     const [search, setSearch] = useState("");
+    const [updateKey, setUpdateKey] = useState(0);
     const clientResources = useQuery({
-        queryKey: ["resources"],
+        queryKey: ["resources", updateKey],
         queryFn: async () => {
             return await getResources()
         },
@@ -41,7 +42,7 @@ export default function ResourcePage({resources, isAdmin}: {resources: any[], is
                         <DialogHeader>
                             <DialogTitle>Upload a document/resource</DialogTitle>
                         </DialogHeader>
-                        <form action={resourceUploadHandler} className="flex flex-col gap-3">
+                        <form action={resourceUploadHandler} className="flex flex-col gap-3" onSubmit={() => setUpdateKey((prev) => prev+1)}>
                             <Label>Document Upload</Label>
                             <Input type="file" name="resource"/>
                             <Label>Tags</Label>
