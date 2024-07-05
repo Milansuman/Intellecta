@@ -56,6 +56,11 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
 
     useEffect(() => {
         setPageKey(pageKey+1);
+
+        const getCollegesList = async () => {
+            setColleges(await getColleges() as College[]);
+        }
+        getCollegesList()
     }, [])
 
     useEffect(() => {
@@ -192,7 +197,7 @@ export function EventsPage({isAdmin}: {isAdmin: boolean}){
                         <Label>Date & Time</Label>
                         <Input type="date" name="datetime" className="disabled:opacity-100" defaultValue={selectedEvent?.datetime} disabled={!isAdmin} required/>
                         <Label>College</Label>
-                        <Select name="college" defaultValue={selectedEvent?.college_id as string} disabled={!isAdmin}>
+                        <Select name="college" defaultValue={selectedEvent?.college_id as string} disabled={!isAdmin} key={selectedEvent?.id as string}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select your college"/>
                             </SelectTrigger>
